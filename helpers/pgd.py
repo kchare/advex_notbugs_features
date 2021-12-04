@@ -3,6 +3,7 @@ Helper functions that run projected gradient descent (PGD) using L-infinity and 
 '''
 
 import tensorflow as tf
+import numpy as np
 
 ################
 ## L-infinity ##
