@@ -138,3 +138,32 @@ def adversarial_training(model, train_ds, test_ds, train_attack=pgd_l2_adv, test
     # Return final train and test losses
     if verbose == False:
         return {'train_loss': train_loss, 'train_acc': train_acc, 'test_loss': test_loss, 'test_acc': test_acc}
+
+def run_adversarial_attack(model, test_ds, attack, attack_params=None, **kwargs):
+    """Runs only the adversarial attack on a trained model. 
+    
+    Differs from standard training by skipping the gradient updates which can be highly costly. Can be
+    demonstrated from training model in standard way and then applying"""
+    # Convert function to tf function
+    attack_fn = tf.function(attack)
+
+    t = time.time()
+    test_losses = []
+    test_accs = []
+    for vb in test_ds:
+        Xtest, ytest = vb
+
+        # Run attack perturbation
+        if attack_params is not None:
+            delta = attack_fn(model, Xtest, ytest, attack_params)
+        else:
+            delta = attack_fn(model, Xtest, ytest, **kwargs)
+
+        Xdtest = Xtest + delta
+        l, acc = model.test_on_batch(Xdtest, ytest)
+        test_losses.append(l)
+        test_accs.append(acc)
+    
+    test_loss = sum(test_losses) / len(test_losses)
+    test_acc = sum(test_accs) / len(test_accs)
+    print(f"Time: {(time.time()-t):0.2f} Test Loss: {test_loss:0.2f}, Test Acc: {test_acc:0.2f}")

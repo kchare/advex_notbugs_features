@@ -16,7 +16,7 @@ def onestep_pgd_linf(model, X, y, epsilon, alpha, delta):
         tape.watch(delta)
         loss = tf.keras.losses.SparseCategoricalCrossentropy()(y, model(X + delta))
 
-    delta = tf.clip_by_value(delta + alpha*tf.sign(tape.gradient(loss, delta)), -epsilon, epsilon)
+    delta = tf.clip_by_value(delta + alpha*tf.sign(tape.gradient(loss, delta)), X-epsilon, X+epsilon)
     
     return delta
 
