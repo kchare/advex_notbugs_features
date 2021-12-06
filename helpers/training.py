@@ -155,7 +155,7 @@ def run_adversarial_attack(model, test_ds, attack, attack_params=None, **kwargs)
 
         # Run attack perturbation
         if attack_params is not None:
-            delta = attack_fn(model, Xtest, ytest, attack_params)
+            delta = attack_fn(model, Xtest, ytest, **attack_params)
         else:
             delta = attack_fn(model, Xtest, ytest, **kwargs)
 
