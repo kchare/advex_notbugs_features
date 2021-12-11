@@ -38,7 +38,7 @@ def norm(Z):
     """Compute norms over all but the first dimension"""
     return tf.norm(tf.reshape(Z, (Z.shape[0], -1)), axis=1) #tf.norm(Z[:,:,:,:], axis=(0,-1))
 
-# PGD L2 for Robustifying #
+########### ROBUSTIFICATION ##############
 def single_pgd_step_robust(model, X, y, alpha, delta):
     with tf.GradientTape() as tape:
         tape.watch(delta)
@@ -62,7 +62,7 @@ def pgd_l2_robust(model, X, y, alpha, num_iter, epsilon=0, example=False):
         print(f'{num_iter} iterations, final MSE {loss}')
     return delta
 
-# PGD L2 for Adversarial Examples #
+################# Adversarial Examples ###############
 def single_pgd_step_adv(model, X, y, alpha, epsilon, delta):
     with tf.GradientTape() as tape:
         tape.watch(delta)
@@ -77,16 +77,11 @@ def single_pgd_step_adv(model, X, y, alpha, epsilon, delta):
     # Updated 12/6/2021 - Move to more intuitive gradient adjustment scheme
     # found here: https://adversarial-ml-tutorial.org/adversarial_examples/
     # - Note: Prev. implementation followed guide at same link but ran into bugs with NaN values
+    # - Note: here we *add* the gradient step because adversarial attacks *maximize* the loss function
     z = delta + alpha * (grad / (normgrad + 1e-10)) # add 1e-10 to prevent div by zero error; tf will not raise, just yield NaNs
     normz = tf.reshape(norm(z), (-1, 1, 1, 1)) # adjust broadcasting
-    delta = epsilon * z / (tf.math.maximum(norm(z), epsilon) + 1e-10) 
-    
-    
-    #delta += alpha*grad / (norm(grad) + 1e-10) # normalized gradient step
-    #delta = tf.math.minimum(tf.math.maximum(delta, -X), 1-X) # clip X+delta to [0,1]
-    # Distinguishes _adv from _robust – bounds the change to the image
-    #delta *= epsilon / tf.clip_by_value(norm(delta), epsilon, np.inf)
-    
+    delta = epsilon * z / (tf.math.maximum(normz, epsilon) + 1e-10) 
+  
     return delta, loss
 
 def pgd_l2_adv(model, X, y, alpha, num_iter, epsilon=0, example=False):
@@ -98,11 +93,14 @@ def pgd_l2_adv(model, X, y, alpha, num_iter, epsilon=0, example=False):
     To optimize performance, will decorate only the interior function. Moreover,
     we will re-instantiate this every time. O/w TF will produce errors related to retracing
     of the computational graph."""
+
+    # Apply tf.function to create computational graph of the single step
+    # for optimal performance
     fn = tf.function(single_pgd_step_adv)
     delta = tf.zeros_like(X)
     loss = 0
     for t in range(num_iter):
-        delta, loss = single_pgd_step_adv(model, X, y, alpha, epsilon, delta)
+        delta, loss = fn(model, X, y, alpha, epsilon, delta)
         
     if example:
         print(f'{num_iter} iterations, final CCE {loss}')

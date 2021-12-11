@@ -81,7 +81,14 @@ def adversarial_training(model, train_ds, test_ds, train_attack=pgd_l2_adv, test
         - epochs (int): number of epochs to run training. Default: 5.
         - verbose (bool): Report results after each epoch. Otherwise
                 will return the train / test accuracies at the end of training. 
-                Default: True"""
+                Default: True
+    """
+    # Create train and test functions wrapped
+    if train_attack is not None:
+      train_attack_tf = tf.function(train_attack)
+    if test_attack is not None:
+      test_attack_tf = tf.function(test_attack)
+
 
     for n in range(epochs):
     
@@ -93,7 +100,7 @@ def adversarial_training(model, train_ds, test_ds, train_attack=pgd_l2_adv, test
 
             # Create adversarially perturbed training data
             if train_attack is not None:
-                delta = train_attack(model, X, y, **kwargs)
+                delta = train_attack_tf(model, X, y, **kwargs)
                 Xd = X + delta
             else:
                 Xd = X  
