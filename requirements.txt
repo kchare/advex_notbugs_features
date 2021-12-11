@@ -1,0 +1,7 @@
+tensorflow>=2.7
+tensorflow-addons
+numpy
+scipy
+matplotlib
+pandas
+time
