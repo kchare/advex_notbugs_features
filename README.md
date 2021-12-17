@@ -13,6 +13,6 @@ The final deliverables for this report are contained in three files. First, the 
 
 In summary:
 
-- [Final Report](notebooks/AM207_Code_Report.ipynb)
+- [Final Report](notebooks/AM207_Report.ipynb)
 - [Code Submission](notebooks/AM207_Code_Submission.ipynb)
 - [Helper Python Files](helpers/)
