@@ -3,6 +3,7 @@ Helper functions that run projected gradient descent (PGD) using L-infinity and 
 '''
 
 import tensorflow as tf
+import numpy as np
 
 ################
 ## L-infinity ##
@@ -40,7 +41,7 @@ def norm(Z):
     """Compute norms over all but the first dimension"""
     return tf.norm(tf.reshape(Z, (Z.shape[0], -1)), axis=1)
 
-# PGD L2 for Robustifying #
+########### ROBUSTIFICATION ##############
 def single_pgd_step_robust(model, X, y, alpha, delta):
     with tf.GradientTape() as tape:
         tape.watch(delta)
